@@ -1,0 +1,138 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    xmlns:custom="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:scrollbarAlwaysDrawVerticalTrack="false"
+    android:scrollbarStyle="insideOverlay">
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="#f6f6f6"
+        android:layout_marginTop="10dp"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="50dp"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/labelStyleRight"
+                android:text="@string/tvServiceState" />
+
+            <TextView
+                android:id="@+id/serviceState_info"
+                style="@style/textStyle" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/labelStyleRight"
+                android:text="@string/tvCellLocation" />
+
+            <TextView
+                android:id="@+id/cellLocation_info"
+                style="@style/textStyle" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/labelStyleRight"
+                android:text="@string/tvCallState" />
+
+            <TextView
+                android:id="@+id/callState_info"
+                style="@style/textStyle" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/labelStyleRight"
+                android:text="@string/tvConnState" />
+
+            <TextView
+                android:id="@+id/connectionState_info"
+                style="@style/textStyle" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" >
+
+            <TextView
+                style="@style/labelStyleRight"
+                android:layout_gravity="center_vertical"
+                android:text="@string/tvSignalLevel" />
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.5"
+                android:orientation="horizontal" >
+
+                <com.github.lzyzsd.circleprogress.ArcProgress
+                    android:id="@+id/signalLevel"
+                    android:background="#00FFFFFF"
+                    android:layout_marginLeft="30dp"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    custom:arc_max="100"
+                    custom:arc_stroke_width="2dp"
+                    custom:arc_unfinished_color="#fff"
+                    custom:arc_text_size="14sp"
+                    custom:arc_suffix_text=" "
+                    custom:arc_suffix_text_padding="0dp"
+                    custom:arc_bottom_text_size="10sp" />
+
+                <TextView
+                    android:id="@+id/signalLevelInfo"
+                    style="@style/textSmallStyle" />
+            </LinearLayout>
+        </LinearLayout>
+        <!-- Data Activity -->
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_marginTop="5dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/labelStyleRight"
+                android:layout_gravity="center_vertical"
+                android:text="@string/strData" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.5"
+                android:orientation="horizontal" >
+            <ImageView
+                android:id="@+id/dataDirection"
+                style="@style/imageStyle"
+                android:layout_centerInParent="true"/>
+                </RelativeLayout>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/device_info"
+            style="@style/labelStyleLeft" />
+    </LinearLayout>
+
+</ScrollView>
