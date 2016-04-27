@@ -2,6 +2,7 @@ package com.byteshaft.towerinfo;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.telephony.PhoneStateListener;
@@ -32,8 +33,6 @@ public class SignalsInfo extends Fragment implements View.OnClickListener {
             R.id.connectionState_info,
             R.id.signalLevel,
             R.id.dataDirection,
-            R.id.device_info,
-
     };
 
     String result;
@@ -173,7 +172,20 @@ public class SignalsInfo extends Fragment implements View.OnClickListener {
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.upload:
-                new NetworkService.UploadDataTask().execute();
+                if (AppGlobals.Uploaded) {
+                    Toast.makeText(getActivity(), "Acquiring Data", Toast.LENGTH_SHORT).show();
+                    if (NetworkService.getInstance() == null) {
+                        Intent intent1 = new Intent(getActivity().getApplicationContext(),
+                                NetworkService.class);
+                        intent1.putExtra(AppGlobals.SEND_BROAD_CAST, true);
+                        getActivity().startService(intent1);
+                    }
+                    if (NetworkService.getInstance() != null) {
+                        NetworkService.getInstance().startLocationUpdate();
+                    }
+                } else {
+                    new NetworkService.UploadDataTask().execute();
+                }
                 break;
         }
     }
@@ -182,14 +194,10 @@ public class SignalsInfo extends Fragment implements View.OnClickListener {
     {
         /* Get the Signal strength from the provider, each tiome there is an update */
         @Override
-        public void onSignalStrengthsChanged(SignalStrength signalStrength)
-        {
+        public void onSignalStrengthsChanged(SignalStrength signalStrength)  {
             super.onSignalStrengthsChanged(signalStrength);
-
             ssignal = signalStrength.toString();
-
             String[] parts = ssignal.split(" ");
-
 
             mSignalStrength.setText(parts[1]);
             gsmBitError.setText(parts[2]);
@@ -223,8 +231,6 @@ public class SignalsInfo extends Fragment implements View.OnClickListener {
 
             allsendingVars = ssignal+""+passingVariabls;
 
-            System.out.println("klsdjflksadfjasdlkfjs ::: "+ allsendingVars);
-
 //         textBatteryLevel.setText("GSM Cinr = "+ String.valueOf(mSignalStrength.getGsmSignalStrength())
 //        		 +"\n"+"GSM CdmaDbm = "+ String.valueOf(mSignalStrength.getGsmSignalStrength())
 //        		 +"\n"+ "GSM EvdoDbm = "+ String.valueOf(mSignalStrength.getEvdoDbm())
@@ -232,16 +238,16 @@ public class SignalsInfo extends Fragment implements View.OnClickListener {
 //        		 +"\n"+ "GSM EvdoSnr = "+ String.valueOf(mSignalStrength.getEvdoSnr())
 //        		 +"\n"+ "GSM BitErrorRate = "+ String.valueOf(mSignalStrength.getGsmBitErrorRate())
 //        		 +"\n"+ "DescribeContents = "+ String.valueOf(mSignalStrength.describeContents()));
-
-
-
-            System.out.println("GSM Cinr = "+ String.valueOf(signalStrength.getGsmSignalStrength()));
-            System.out.println("GSM CdmaDbm = "+ String.valueOf(signalStrength.getGsmSignalStrength()));
-            System.out.println("GSM EvdoDbm = "+ String.valueOf(signalStrength.getEvdoDbm()));
-            System.out.println("GSM EvdoEcio = "+ String.valueOf(signalStrength.getEvdoEcio()));
-            System.out.println("GSM EvdoSnr = "+ String.valueOf(signalStrength.getEvdoSnr()));
-            System.out.println("GSM BitErrorRate = "+ String.valueOf(signalStrength.getGsmBitErrorRate()));
-            System.out.println("GSM DescribeContents = "+ String.valueOf(signalStrength.describeContents()));
+//
+//
+//
+//            System.out.println("GSM Cinr = "+ String.valueOf(signalStrength.getGsmSignalStrength()));
+//            System.out.println("GSM CdmaDbm = "+ String.valueOf(signalStrength.getGsmSignalStrength()));
+//            System.out.println("GSM EvdoDbm = "+ String.valueOf(signalStrength.getEvdoDbm()));
+//            System.out.println("GSM EvdoEcio = "+ String.valueOf(signalStrength.getEvdoEcio()));
+//            System.out.println("GSM EvdoSnr = "+ String.valueOf(signalStrength.getEvdoSnr()));
+//            System.out.println("GSM BitErrorRate = "+ String.valueOf(signalStrength.getGsmBitErrorRate()));
+//            System.out.println("GSM DescribeContents = "+ String.valueOf(signalStrength.describeContents()));
         }
 
     };
@@ -249,8 +255,7 @@ public class SignalsInfo extends Fragment implements View.OnClickListener {
     private String getNetworkTypeString(int type){
         String typeString = "Unknown";
 
-        switch(type)
-        {
+        switch(type)  {
             case TelephonyManager.NETWORK_TYPE_EDGE:        typeString = "EDGE"; break;
             case TelephonyManager.NETWORK_TYPE_GPRS:        typeString = "GPRS"; break;
             case TelephonyManager.NETWORK_TYPE_UMTS:        typeString = "UMTS"; break;

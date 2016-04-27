@@ -186,20 +186,17 @@ public class NetworkService extends Service implements LocationListener,
     }
 
     private final void complete() {
+        AppGlobals.Uploaded = false;
         try {
             // Stop listening.
             mManager.listen(mListener, PhoneStateListener.LISTEN_NONE);
-            if (AppGlobals.APP_FOREGROUND) {
-                Toast.makeText(getApplicationContext(), R.string.done, Toast.LENGTH_SHORT).show();
-            }
             String date = Helpers.getTimeStamp();
             Helpers.saveGsmDetails(date, mTextStr);
             Set<String> set = Helpers.getHashSet();
             set.add(date);
             Helpers.saveHashSet(set);
             if (AppGlobals.CURRENT_STATE.equals(AppGlobals.schedule)) {
-                new UploadDataTask().execute();
-
+//                new UploadDataTask().execute();
             }
 
         } catch (Exception e) {
@@ -270,21 +267,23 @@ public class NetworkService extends Service implements LocationListener,
                     connection.setRequestProperty("Content-Type", "application/json");
                     connection.setRequestMethod("POST");
                     Set<String> strings = Helpers.getHashSet();
-                    Log.i("strings", String.valueOf(strings));
-                    StringBuilder totalData = new StringBuilder();
-                    Object[] array = strings.toArray();
-                    for (Object singleGsm : array) {
-                        String gsmData = Helpers.getGsmDetails(singleGsm.toString());
-                        Log.i("single", gsmData);
-                        totalData.append(gsmData).append("\n");
-                        Helpers.removeGsmDetails(singleGsm.toString());
-                        strings.remove(singleGsm.toString());
+                    if (!strings.isEmpty()) {
+                        Log.i("strings", String.valueOf(strings));
+                        StringBuilder totalData = new StringBuilder();
+                        Object[] array = strings.toArray();
+                        for (Object singleGsm : array) {
+                            String gsmData = Helpers.getGsmDetails(singleGsm.toString());
+                            Log.i("single", gsmData);
+                            totalData.append(gsmData).append("\n");
+                            Helpers.removeGsmDetails(singleGsm.toString());
+                            strings.remove(singleGsm.toString());
+                        }
+                        String jsonFormattedData = getJsonObjectString(totalData.toString());
+                        Log.i("total", totalData.toString());
+                        sendRequestData(connection, jsonFormattedData);
+                        Helpers.saveHashSet(strings);
+                        Log.i("HASHSet", String.valueOf(Helpers.getHashSet()));
                     }
-                    String jsonFormattedData = getJsonObjectString(totalData.toString());
-                    Log.i("total", totalData.toString());
-                    sendRequestData(connection, jsonFormattedData);
-                    Helpers.saveHashSet(strings);
-                    Log.i("HASHSet", String.valueOf(Helpers.getHashSet()));
                     response = connection.getResponseCode();
                     Log.i("TAG", connection.getResponseMessage());
                     connection.disconnect();
@@ -306,6 +305,7 @@ public class NetworkService extends Service implements LocationListener,
             mTextStr = "";
             Log.i("TAG", " " + integer);
             if (integer == HttpURLConnection.HTTP_OK) {
+                AppGlobals.Uploaded = true;
                 if (AppGlobals.APP_FOREGROUND) {
                     Toast.makeText(AppGlobals.getContext(), "success", Toast.LENGTH_SHORT).show();
                 }
@@ -315,7 +315,7 @@ public class NetworkService extends Service implements LocationListener,
                             Toast.LENGTH_SHORT).show();
                 }
             }
-//            AlarmHelpers.setAlarmForDetails();
+            AlarmHelpers.setAlarmForDetails();
         }
     }
 

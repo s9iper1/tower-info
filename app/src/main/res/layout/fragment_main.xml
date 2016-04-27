@@ -16,11 +16,12 @@
         <LinearLayout
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="50dp"
+            android:layout_marginTop="80dp"
             android:orientation="horizontal">
 
             <TextView
                 style="@style/labelStyleRight"
+                android:layout_gravity="center_vertical"
                 android:text="@string/tvServiceState" />
 
             <TextView
@@ -35,6 +36,7 @@
 
             <TextView
                 style="@style/labelStyleRight"
+                android:layout_gravity="center_vertical"
                 android:text="@string/tvCellLocation" />
 
             <TextView
@@ -49,6 +51,7 @@
 
             <TextView
                 style="@style/labelStyleRight"
+                android:layout_gravity="center_vertical"
                 android:text="@string/tvCallState" />
 
             <TextView
@@ -63,6 +66,7 @@
 
             <TextView
                 style="@style/labelStyleRight"
+                android:layout_gravity="center_vertical"
                 android:text="@string/tvConnState" />
 
             <TextView
@@ -129,10 +133,146 @@
                 android:layout_centerInParent="true"/>
                 </RelativeLayout>
         </LinearLayout>
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/device_info"
-            style="@style/labelStyleLeft" />
+            <TextView
+                style="@style/labelStyleRight"
+                android:layout_gravity="center_vertical"
+                android:text="Device ID: " />
+
+            <TextView
+                android:id="@+id/device_id"
+                style="@style/textStyle" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/labelStyleRight"
+                android:layout_gravity="center_vertical"
+                android:text="Phone Number:" />
+
+            <TextView
+                android:id="@+id/phone_number"
+                style="@style/textStyle" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/labelStyleRight"
+                android:layout_gravity="center_vertical"
+                android:text="Software Version:" />
+
+            <TextView
+                android:id="@+id/software_version"
+                style="@style/textStyle" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/labelStyleRight"
+                android:layout_gravity="center_vertical"
+                android:text="Operator Name:" />
+
+            <TextView
+                android:id="@+id/operator_name"
+                style="@style/textStyle" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/labelStyleRight"
+                android:layout_gravity="center_vertical"
+                android:text="SIM Country:" />
+
+            <TextView
+                android:id="@+id/sim_country"
+                style="@style/textStyle" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/labelStyleRight"
+                android:layout_gravity="center_vertical"
+                android:text="SIM Operator:" />
+
+            <TextView
+                android:id="@+id/sim_operator"
+                style="@style/textStyle" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/labelStyleRight"
+                android:layout_gravity="center_vertical"
+                android:text="SIM Serial Number:" />
+
+            <TextView
+                android:id="@+id/sim_serial_number"
+                style="@style/textStyle" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/labelStyleRight"
+                android:layout_gravity="center_vertical"
+                android:text="Subscriber ID:" />
+
+            <TextView
+                android:id="@+id/subscriber_id"
+                style="@style/textStyle" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/labelStyleRight"
+                android:layout_gravity="center_vertical"
+                android:text="Network Type" />
+
+            <TextView
+                android:id="@+id/network_type"
+                style="@style/textStyle" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/labelStyleRight"
+                android:layout_gravity="center_vertical"
+                android:text="Phone Type" />
+
+            <TextView
+                android:id="@+id/phone_type"
+                style="@style/textStyle" />
+        </LinearLayout>
     </LinearLayout>
 
 </ScrollView>

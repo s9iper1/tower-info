@@ -1,12 +1,10 @@
 package com.byteshaft.towerinfo;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.telephony.CellLocation;
-import android.telephony.PhoneStateListener;
-import android.telephony.ServiceState;
 import android.telephony.TelephonyManager;
 import android.telephony.gsm.GsmCellLocation;
 import android.util.Log;
@@ -21,21 +19,21 @@ import com.github.lzyzsd.circleprogress.ArcProgress;
 
 public class PhoneInfo extends Fragment {
 
-    private View mBaseView;
+    private  static View mBaseView;
     private static final int EXCELLENT_LEVEL = 75;
     private static final int GOOD_LEVEL = 50;
     private static final int MODERATE_LEVEL = 25;
     private static final int WEAK_LEVEL = 0;
-    private static final int INFO_SERVICE_STATE_INDEX = 0;
-    private static final int INFO_CELL_LOCATION_INDEX = 1;
-    private static final int INFO_CALL_STATE_INDEX = 2;
-    private static final int INFO_CONNECTION_STATE_INDEX = 3;
-    private static final int INFO_SIGNAL_LEVEL_INDEX = 4;
-    private static final int INFO_SIGNAL_LEVEL_INFO_INDEX = 5;
-    private static final int INFO_DATA_DIRECTION_INDEX = 6;
-    private static final int INFO_DEVICE_INFO_INDEX = 7;
+    public static final int INFO_SERVICE_STATE_INDEX = 0;
+    public static final int INFO_CELL_LOCATION_INDEX = 1;
+    public static final int INFO_CALL_STATE_INDEX = 2;
+    public static final int INFO_CONNECTION_STATE_INDEX = 3;
+    public static final int INFO_SIGNAL_LEVEL_INDEX = 4;
+    public static final int INFO_SIGNAL_LEVEL_INFO_INDEX = 5;
+    public static final int INFO_DATA_DIRECTION_INDEX = 6;
+    public static final int INFO_DEVICE_INFO_INDEX = 7;
 
-    private static final int[] info_ids= {
+    public  final int[] info_ids= {
             R.id.serviceState_info,
             R.id.cellLocation_info,
             R.id.callState_info,
@@ -43,26 +41,72 @@ public class PhoneInfo extends Fragment {
             R.id.signalLevel,
             R.id.signalLevelInfo,
             R.id.dataDirection,
-            R.id.device_info,
 
     };
     private String passingVariabls;
+    private TextView deviceId;
+    private TextView phoneNumber;
+    private TextView softwareVersion;
+    private TextView operatorName;
+    private TextView simCountryCode;
+    private TextView simOperator;
+    private TextView simSerialNUmber;
+    private TextView subscriberId;
+    private TextView networkType;
+    private TextView phoneType;
+    public TextView serviceState_info;
+    public TextView cellLocation_info;
+    public TextView callState_info;
+    public TextView connectionState_info;
+    public ArcProgress signalLevel;
+    public TextView signalLevelInfo;
+    public ImageView dataDirection;
+    public static PhoneInfo instance;
+
+
+    public static PhoneInfo getInstance() {
+        return instance;
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         mBaseView = inflater.inflate(R.layout.fragment_main, container, false);
-        startSignalLevelListener();
+        instance = this;
+        AppGlobals.APP_FOREGROUND = true;
+        deviceId = (TextView) mBaseView.findViewById(R.id.device_id);
+        phoneNumber = (TextView) mBaseView.findViewById(R.id.phone_number);
+        softwareVersion = (TextView) mBaseView.findViewById(R.id.software_version);
+        operatorName = (TextView) mBaseView.findViewById(R.id.operator_name);
+        simCountryCode = (TextView) mBaseView.findViewById(R.id.sim_country);
+        simOperator = (TextView) mBaseView.findViewById(R.id.sim_operator);
+        simSerialNUmber = (TextView) mBaseView.findViewById(R.id.sim_serial_number);
+        subscriberId = (TextView) mBaseView.findViewById(R.id.subscriber_id);
+        networkType = (TextView) mBaseView.findViewById(R.id.network_type);
+        phoneType = (TextView) mBaseView.findViewById(R.id.phone_type);
+        serviceState_info = (TextView) mBaseView.findViewById(R.id.serviceState_info);
+        cellLocation_info = (TextView) mBaseView.findViewById(R.id.cellLocation_info);
+        callState_info = (TextView) mBaseView.findViewById(R.id.callState_info);
+        connectionState_info = (TextView) mBaseView.findViewById(R.id.connectionState_info);
+        signalLevel = (ArcProgress) mBaseView.findViewById(R.id.signalLevel);
+        signalLevelInfo = (TextView) mBaseView.findViewById(R.id.signalLevelInfo);
+        dataDirection = (ImageView) mBaseView.findViewById(R.id.dataDirection);
         displayTelephonyInfo();
+        GlobalReceiver.startSignalLevelListener(getActivity().getApplicationContext());
 
         return mBaseView;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
     public void onStop() {
         super.onStop();
         //Stop listening to the telephony events
-        StopListener();
+//        StopListener();
 
     }
 
@@ -70,53 +114,15 @@ public class PhoneInfo extends Fragment {
     public void onPause() {
         super.onPause();
         //Stop listening to the telephony events
-        StopListener();
+//        StopListener();
     }
 
     @Override
     public void onResume() {
         super.onResume();
         //subscribes to the telephony related events
-        startSignalLevelListener();
+        AppGlobals.APP_FOREGROUND = true;
     }
-
-    private void setTextViewText(int id,String text) {
-        ((TextView) mBaseView.findViewById(id)).setText(text);
-    }
-
-
-    /*
-    *
-    * */
-    private void startSignalLevelListener() {
-
-        Log.i("startSignalLevelListener", "<<------- START ------- >>");
-        TelephonyManager tm = (TelephonyManager) getActivity().getApplicationContext()
-                .getSystemService(Context.TELEPHONY_SERVICE);
-        @SuppressWarnings("deprecation")
-        int events = PhoneStateListener.LISTEN_SIGNAL_STRENGTH |
-                PhoneStateListener.LISTEN_DATA_ACTIVITY |
-                PhoneStateListener.LISTEN_CELL_LOCATION |
-                PhoneStateListener.LISTEN_CALL_STATE |
-                PhoneStateListener.LISTEN_CALL_FORWARDING_INDICATOR |
-                PhoneStateListener.LISTEN_DATA_CONNECTION_STATE |
-                PhoneStateListener.LISTEN_SERVICE_STATE;
-
-        tm.listen(phoneListener, events);
-        Log.i("startSignalLevelListener", "<<------- END ------- >>");
-    }
-
-
-    /*
-     * De-register the telephony events
-     *
-     * */
-    private void StopListener() {
-        TelephonyManager tm = (TelephonyManager) getActivity().getApplicationContext()
-                .getSystemService(Context.TELEPHONY_SERVICE);
-        tm.listen(phoneListener, PhoneStateListener.LISTEN_NONE);
-    }
-
 
     /*
      * Display the telephony related information
@@ -156,36 +162,30 @@ public class PhoneInfo extends Fragment {
 
         String deviceinfo = "";
 
-        deviceinfo += ("Device ID: " + deviceid + "\n");
-        deviceinfo += ("Phone Number: " + phonenumber + "\n");
-        deviceinfo += ("Software Version: " + softwareversion + "\n");
-        deviceinfo += ("Operator Name: " + operatorname + "\n");
-        deviceinfo += ("SIM Country Code: " + simcountrycode + "\n");
-        deviceinfo += ("SIM Operator: " + simoperator + "\n");
-        deviceinfo += ("SIM Serial No.: " + simserialno + "\n");
-        deviceinfo += ("Subscriber ID: " + subscriberid + "\n");
-        deviceinfo += ("Network Type: " + networktype + "\n");
-        deviceinfo += ("Phone Type: " + phonetype + "\n");
-        setTextViewText(info_ids[INFO_DEVICE_INFO_INDEX],deviceinfo);
-
+        this.deviceId.setText(deviceid);
+        this.phoneNumber.setText(phonenumber);
+        this.softwareVersion.setText(softwareversion);
+        this.operatorName.setText(operatorname);
+        this.simCountryCode.setText(simcountrycode);
+        this.simOperator.setText(simoperator);
+        this.simSerialNUmber.setText(simserialno);
+        this.subscriberId.setText(subscriberid);
+        this.networkType.setText(networktype);
+        this.phoneType.setText(phonetype);
 //        passingVariabls = deviceid+","+phonenumber+","+softwareversion+","+operatorname+","+simcountrycode+","+simoperator
 //                +","+simserialno+","+subscriberid+","+networktype+","+phonetype;
 
         // Toast.makeText(getApplicationContext(), "var"+passingVariabls, Toast.LENGTH_SHORT).show();
     }
 
-
-
-
-
-    private void setDataDirection(int id, int direction){
+    public void setDataDirection(int direction){
         int resid = getDataDirectionRes(direction);
         //((TextView)findViewById(id)).setCompoundDrawables(null, null,getResources().getDrawable(resid), null);
-        ((ImageView) mBaseView.findViewById(id)).setImageResource(resid);
+        ((ImageView) mBaseView.findViewById(R.id.dataDirection)).setImageResource(resid);
     }
 
     private int getDataDirectionRes(int direction){
-        int resid = R.drawable.nodata;
+        int resid;
         switch(direction)  {
             case TelephonyManager.DATA_ACTIVITY_IN:    		resid = R.drawable.indata;break;
             case TelephonyManager.DATA_ACTIVITY_OUT:        resid = R.drawable.outdata; break;
@@ -197,7 +197,7 @@ public class PhoneInfo extends Fragment {
         return resid;
     }
 
-    private void setSignalLevel(int id,int infoid,int level){
+    public void setSignalLevel(int id,int infoid,int level){
 
         int progress = (int) ((((float)level)/31.0) * 100);
 
@@ -220,7 +220,7 @@ public class PhoneInfo extends Fragment {
     }
 
 
-    private String getSignalLevelString(int level) {
+    public String getSignalLevelString(int level) {
 
         String signalLevelString = "Weak";
 
@@ -235,18 +235,18 @@ public class PhoneInfo extends Fragment {
 
 
     private String getNetworkTypeString(int type){
-        String typeString = "Unknown";
-
+        Log.i("NETWORK TYE", "" + type);
         switch(type)
         {
-            case TelephonyManager.NETWORK_TYPE_EDGE:        typeString = "EDGE"; break;
-            case TelephonyManager.NETWORK_TYPE_GPRS:        typeString = "GPRS"; break;
-            case TelephonyManager.NETWORK_TYPE_UMTS:        typeString = "UMTS"; break;
+            case TelephonyManager.NETWORK_TYPE_EDGE:
+                return "EDGE";
+            case TelephonyManager.NETWORK_TYPE_GPRS:
+                return  "GPRS";
+            case TelephonyManager.NETWORK_TYPE_UMTS:
+                return  "UMTS";
             default:
-                typeString = "UNKNOWN"; break;
+                return  "UNKNOWN";
         }
-
-        return typeString;
     }
 
     private String getPhoneTypeString(int type){
@@ -264,130 +264,127 @@ public class PhoneInfo extends Fragment {
     }
 
 
-    private final PhoneStateListener phoneListener = new  PhoneStateListener(){
-
-        /*
-         * call fwding
-         * */
-        public void onCallForwardingIndicatorChanged(boolean cfi){
-            super.onCallForwardingIndicatorChanged(cfi);
-        }
-
-        @Override
-        public void onCallStateChanged(int state, String incomingNumber) {
-            super.onCallStateChanged(state, incomingNumber);
-            String phoneState = "UNKNOWN";
-            switch(state){
-
-                case TelephonyManager.CALL_STATE_IDLE :
-                    phoneState = "IDLE";
-                    break;
-                case TelephonyManager.CALL_STATE_RINGING :
-                    phoneState = "Ringing (" + incomingNumber + ") ";
-                    break;
-                case TelephonyManager.CALL_STATE_OFFHOOK :
-                    phoneState = "Offhook";
-                    break;
-
-            }
-
-            setTextViewText(info_ids[INFO_CALL_STATE_INDEX], phoneState);
-
-        }
-
-        @Override
-        public void onCellLocationChanged(CellLocation location) {
-            super.onCellLocationChanged(location);
-            String strLocation = location.toString();
-
-            setTextViewText(info_ids[INFO_CELL_LOCATION_INDEX], strLocation);
-        }
-
-
-
-
-        /*
-         * Cellphone data connection status
-         * */
-
-        @Override
-        public void onDataConnectionStateChanged(int state, int networkType) {
-            super.onDataConnectionStateChanged(state, networkType);
-            String phoneState = "UNKNOWN";
-            switch(state){
-
-                case TelephonyManager.DATA_CONNECTED :
-                    phoneState = "Connected";
-                    break;
-                case TelephonyManager.DATA_CONNECTING :
-                    phoneState = "Connecting..";
-                    break;
-                case TelephonyManager.DATA_DISCONNECTED :
-                    phoneState = "Disconnected";
-                    break;
-                case TelephonyManager.DATA_SUSPENDED :
-                    phoneState = "Suspended";
-                    break;
-            }
-            setTextViewText(info_ids[INFO_CONNECTION_STATE_INDEX], phoneState);
-
-        }
-
-        @Override
-        public void onDataActivity(int direction) {
-            super.onDataActivity(direction);
-            String strDirection = "NONE";
-            switch(direction){
-
-                case TelephonyManager.DATA_ACTIVITY_IN:
-                    strDirection = "IN";
-                    break;
-                case TelephonyManager.DATA_ACTIVITY_INOUT:
-                    strDirection = "IN-OUT";
-                    break;
-                case TelephonyManager.DATA_ACTIVITY_DORMANT:
-                    strDirection = "Dormant";
-                    break;
-                case TelephonyManager.DATA_ACTIVITY_NONE:
-                    strDirection="NONE";
-                    break;
-                case TelephonyManager.DATA_ACTIVITY_OUT:
-                    strDirection="OUT";
-                    break;
-
-            }
-            Log.i("DIRECTION", String.valueOf(direction) + ""+ info_ids[INFO_DATA_DIRECTION_INDEX]);
-            setDataDirection(info_ids[INFO_DATA_DIRECTION_INDEX], direction);
-
-        }
-
-        @Override
-        public void onServiceStateChanged(ServiceState serviceState) {
-            super.onServiceStateChanged(serviceState);
-            String strServiceState = "NONE";
-            switch(serviceState.getState()){
-
-                case ServiceState.STATE_EMERGENCY_ONLY:
-                    strServiceState = "Emergency";
-                    break;
-                case ServiceState.STATE_IN_SERVICE:
-                    strServiceState = "In Service";
-                    break;
-                case ServiceState.STATE_OUT_OF_SERVICE:
-                    strServiceState = "Out of Service";
-                    break;
-                case ServiceState.STATE_POWER_OFF:
-                    strServiceState = "Power off";
-                    break;
-            }
-
-            setTextViewText(info_ids[INFO_SERVICE_STATE_INDEX], strServiceState);
-        }
-
-        @Override
-        public void onSignalStrengthChanged(int asu) {
-            super.onSignalStrengthChanged(asu);
-            setSignalLevel(info_ids[INFO_SIGNAL_LEVEL_INDEX], info_ids[INFO_SIGNAL_LEVEL_INFO_INDEX],asu);
-        }
-    };
+//    private final PhoneStateListener phoneListener = new  PhoneStateListener(){
+//
+//
+//        @Override
+//        public void onCallStateChanged(int state, String incomingNumber) {
+//            super.onCallStateChanged(state, incomingNumber);
+//            Log.e("onCallStateChanged", "onCallStateChanged");
+//            String phoneState = "UNKNOWN";
+//            switch(state){
+//
+//                case TelephonyManager.CALL_STATE_IDLE :
+//                    phoneState = "IDLE";
+//                    break;
+//                case TelephonyManager.CALL_STATE_RINGING :
+//                    phoneState = "Ringing (" + incomingNumber + ") ";
+//                    break;
+//                case TelephonyManager.CALL_STATE_OFFHOOK :
+//                    phoneState = "Offhook";
+//                    break;
+//
+//            }
+//
+//            callState_info.setText(phoneState);
+////            setTextViewText(info_ids[INFO_CALL_STATE_INDEX], phoneState);
+//
+//        }
+//
+//        @Override
+//        public void onCellLocationChanged(CellLocation location) {
+//            super.onCellLocationChanged(location);
+//            Log.e("onCellLocationChanged", "onCellLocationChanged");
+//            String strLocation = location.toString();
+//            cellLocation_info.setText(strLocation);
+////            setTextViewText(info_ids[INFO_CELL_LOCATION_INDEX], strLocation);
+//        }
+//
+//        /*
+//         * Cellphone data connection status
+//         * */
+//
+//        @Override
+//        public void onDataConnectionStateChanged(int state, int networkType) {
+//            super.onDataConnectionStateChanged(state, networkType);
+//            Log.e("onDataConnectionState", "onDataConnectionStateChanged");
+//            String phoneState = "UNKNOWN";
+//            switch(state){
+//                case TelephonyManager.DATA_CONNECTED :
+//                    phoneState = "Connected";
+//                    break;
+//                case TelephonyManager.DATA_CONNECTING :
+//                    phoneState = "Connecting..";
+//                    break;
+//                case TelephonyManager.DATA_DISCONNECTED :
+//                    phoneState = "Disconnected";
+//                    break;
+//                case TelephonyManager.DATA_SUSPENDED :
+//                    phoneState = "Suspended";
+//                    break;
+//            }
+//            connectionState_info.setText(phoneState);
+////            setTextViewText(info_ids[INFO_CONNECTION_STATE_INDEX], phoneState);
+//
+//        }
+//
+//        @Override
+//        public void onDataActivity(int direction) {
+//            super.onDataActivity(direction);
+//            Log.e("onDataActivity", "onDataActivity");
+//            String strDirection = "NONE";
+//            switch(direction){
+//
+//                case TelephonyManager.DATA_ACTIVITY_IN:
+//                    strDirection = "IN";
+//                    break;
+//                case TelephonyManager.DATA_ACTIVITY_INOUT:
+//                    strDirection = "IN-OUT";
+//                    break;
+//                case TelephonyManager.DATA_ACTIVITY_DORMANT:
+//                    strDirection = "Dormant";
+//                    break;
+//                case TelephonyManager.DATA_ACTIVITY_NONE:
+//                    strDirection="NONE";
+//                    break;
+//                case TelephonyManager.DATA_ACTIVITY_OUT:
+//                    strDirection="OUT";
+//                    break;
+//
+//            }
+//            setDataDirection(direction);
+//
+//        }
+//
+//        @Override
+//        public void onServiceStateChanged(ServiceState serviceState) {
+//            super.onServiceStateChanged(serviceState);
+//            Log.e("onServiceStateChanged", "onServiceStateChanged");
+//            String strServiceState = "NONE";
+//            switch(serviceState.getState()){
+//
+//                case ServiceState.STATE_EMERGENCY_ONLY:
+//                    strServiceState = "Emergency";
+//                    break;
+//                case ServiceState.STATE_IN_SERVICE:
+//                    strServiceState = "In Service";
+//                    break;
+//                case ServiceState.STATE_OUT_OF_SERVICE:
+//                    strServiceState = "Out of Service";
+//                    break;
+//                case ServiceState.STATE_POWER_OFF:
+//                    strServiceState = "Power off";
+//                    break;
+//            }
+//
+//            serviceState_info.setText(strServiceState);
+////            setTextViewText(info_ids[INFO_SERVICE_STATE_INDEX], strServiceState);
+//        }
+//
+//        @Override
+//        public void onSignalStrengthChanged(int asu) {
+//            super.onSignalStrengthChanged(asu);
+//            setSignalLevel(info_ids[INFO_SIGNAL_LEVEL_INDEX], info_ids[INFO_SIGNAL_LEVEL_INFO_INDEX],asu);
+//        }
+//    };
 }
