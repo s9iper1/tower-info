@@ -142,12 +142,12 @@ public class NetworkService extends Service implements LocationListener,
                         CellInfoGsm cellInfoGsm = (CellInfoGsm) cellInfo;
                         CellIdentityGsm cellIdentityGsm = cellInfoGsm.getCellIdentity();
                         CellSignalStrengthGsm cellSignalStrengthGsm = cellInfoGsm.getCellSignalStrength();
-                        neighbouringInfo.append(cellIdentityGsm.getCid()).append(COMMA)
-                                .append(cellIdentityGsm.getLac()).append(COMMA).
-                                append(cellSignalStrengthGsm.getDbm()).append(COMMA);
-                        Log.e("neighbour", neighbouringInfo.toString());
+                        neighbouringInfo.append("["+cellIdentityGsm.getCid()).append("|")
+                                .append(cellIdentityGsm.getLac()).append("|").
+                                append(cellSignalStrengthGsm.getDbm()).append("]&");
                     }
                 }
+                Log.e("neighbour", neighbouringInfo.toString());
             }
             Log.d(TAG, "Signal strength obtained.");
             mSignalStrength = sStrength;
@@ -163,16 +163,19 @@ public class NetworkService extends Service implements LocationListener,
 
         protected Void doInBackground(Void... mVoid) {
             String imei = mManager.getDeviceId();
-            mTextStr = AppGlobals.CURRENT_STATE + COMMA + mManager.getSubscriberId() +
+            mTextStr = AppGlobals.CURRENT_STATE +COMMA+ mManager.getLine1Number() + COMMA + mManager.getSubscriberId() +
                     COMMA + imei + COMMA + mManager.getSimSerialNumber() + COMMA + Helpers.getTimeStamp()
                     + COMMA + mManager.getNetworkOperatorName() + COMMA + AppGlobals.LOCATION + COMMA
                     +SERVICE_STATE + COMMA + ReflectionUtils.dumpClass(SignalStrength.class,
                     mSignalStrength) +
-                    ReflectionUtils.dumpClass(mCellLocation.getClass(), mCellLocation) + SPACE
-                    + getWimaxDump() + neighbouringInfo;
+                    ReflectionUtils.dumpClass(mCellLocation.getClass(), mCellLocation)
+                    + neighbouringInfo.substring(0, neighbouringInfo.length() -1);
             mTextStr = mTextStr.replace("[-1,-1,-1]", "[-1|-1|-1]");
             Log.i("TAG", mTextStr);
-            Log.i("INFO",  "this" + String.valueOf(neighbouringInfo));
+            Log.e("ReflectionUtils.dumpClass", ReflectionUtils.dumpClass(SignalStrength.class, mSignalStrength));
+            Log.e("ReflectionUtils.dumpClass", ReflectionUtils.dumpClass(mCellLocation.getClass(), mCellLocation));
+            Log.e("getWimaxDump()", "getWimaxDump" +getWimaxDump());
+            Log.e("neighbouringInfo", String.valueOf(neighbouringInfo));
             return null;
         }
 
@@ -187,6 +190,7 @@ public class NetworkService extends Service implements LocationListener,
 
     private final void complete() {
         AppGlobals.Uploaded = false;
+        AlarmHelpers.setAlarmForDetails();
         try {
             // Stop listening.
             mManager.listen(mListener, PhoneStateListener.LISTEN_NONE);
@@ -196,7 +200,7 @@ public class NetworkService extends Service implements LocationListener,
             set.add(date);
             Helpers.saveHashSet(set);
             if (AppGlobals.CURRENT_STATE.equals(AppGlobals.schedule)) {
-//                new UploadDataTask().execute();
+                new UploadDataTask().execute();
             }
 
         } catch (Exception e) {
@@ -239,7 +243,6 @@ public class NetworkService extends Service implements LocationListener,
         OutputStream os = connection.getOutputStream();
         os.write(outputInBytes);
         os.close();
-        System.out.println("TAG " + connection.getResponseCode() + "" + connection.getResponseMessage());
     }
 
     private static String getJsonObjectString(String data) {
@@ -301,7 +304,6 @@ public class NetworkService extends Service implements LocationListener,
         @Override
         protected void onPostExecute(Integer integer) {
             super.onPostExecute(integer);
-            System.out.println(mTextStr);
             mTextStr = "";
             Log.i("TAG", " " + integer);
             if (integer == HttpURLConnection.HTTP_OK) {
@@ -315,7 +317,6 @@ public class NetworkService extends Service implements LocationListener,
                             Toast.LENGTH_SHORT).show();
                 }
             }
-            AlarmHelpers.setAlarmForDetails();
         }
     }
 

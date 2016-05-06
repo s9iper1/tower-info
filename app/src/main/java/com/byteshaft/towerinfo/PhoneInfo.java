@@ -216,7 +216,6 @@ public class PhoneInfo extends Fragment {
             arcProgress.setFinishedStrokeColor(Color.GREEN);
         }
         arcProgress.setBottomText(signalLevelString);
-        Log.i("signalLevel ","" + progress);
     }
 
 
