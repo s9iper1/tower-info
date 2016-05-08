@@ -15,6 +15,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_UPDATES"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
     <application
         android:name=".AppGlobals"
@@ -42,22 +43,27 @@
                 <action android:name="com.byteshaft.gsmDetails"/>
             </intent-filter>
         </receiver>
-        <receiver android:name=".IncomingCallListener" android:enabled="true">
-            <intent-filter>
-                <action  android:name="android.intent.action.PHONE_STATE" />
-                <action android:name="android.intent.action.NEW_OUTGOING_CALL" />
-            </intent-filter>
-        </receiver>
-        <receiver android:name=".DataReceiver">
-            <intent-filter>
-                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
-            </intent-filter>
-        </receiver>
+        <!--<receiver android:name=".IncomingCallListener" android:enabled="true">-->
+            <!--<intent-filter>-->
+                <!--<action  android:name="android.intent.action.PHONE_STATE" />-->
+                <!--<action android:name="android.intent.action.NEW_OUTGOING_CALL" />-->
+            <!--</intent-filter>-->
+        <!--</receiver>-->
+        <!--<receiver android:name=".DataReceiver">-->
+            <!--<intent-filter>-->
+                <!--<action android:name="android.net.conn.CONNECTIVITY_CHANGE" />-->
+            <!--</intent-filter>-->
+        <!--</receiver>-->
         <receiver android:name=".GlobalReceiver" android:enabled="true">
             <intent-filter>
                 <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
                 <action android:name="android.net.wifi.WIFI_STATE_CHANGED" />
                 <action  android:name="android.intent.action.PHONE_STATE" />
+            </intent-filter>
+        </receiver>
+        <receiver android:name=".BootStateListener">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
             </intent-filter>
         </receiver>
     </application>

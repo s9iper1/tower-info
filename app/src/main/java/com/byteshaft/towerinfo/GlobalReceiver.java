@@ -15,17 +15,22 @@ public class GlobalReceiver extends BroadcastReceiver {
 
     private static Context mContext;
     public static boolean wifiAction;
+    private static final String TAG = "GlobalReceiver";
+    private static boolean dataState = false;
+    private static boolean inComingCall = false;
+    private static boolean outGoingCall = false;
+    private static boolean calledAttended = false;
+    private static boolean calledOnce = false;
 
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        Log.i(TAG, "Receiver Called");
         mContext = context;
         if (intent.getAction().equals("android.net.wifi.WIFI_STATE_CHANGED")) {
             wifiAction = true;
         }
-        if (AppGlobals.APP_FOREGROUND) {
-            startSignalLevelListener(mContext);
-        }
+        startSignalLevelListener(mContext);
 
     }
 
@@ -52,16 +57,32 @@ public class GlobalReceiver extends BroadcastReceiver {
         public void onCallStateChanged(int state, String incomingNumber) {
             super.onCallStateChanged(state, incomingNumber);
             String phoneState = "UNKNOWN";
-            switch(state){
-
-                case TelephonyManager.CALL_STATE_IDLE :
+            switch (state) {
+                case TelephonyManager.CALL_STATE_IDLE:
                     phoneState = "IDLE";
+                    if (inComingCall && calledAttended || outGoingCall) {
+                        if (NetworkService.getInstance() != null) {
+                            Log.i("IDLE: ", "state idle ");
+                            AppGlobals.CURRENT_STATE = AppGlobals.call_dropped;
+                            NetworkService.getInstance().startLocationUpdate();
+                            inComingCall = false;
+                            outGoingCall = false;
+                            calledAttended = false;
+                        }
+                    }
                     break;
-                case TelephonyManager.CALL_STATE_RINGING :
+                case TelephonyManager.CALL_STATE_RINGING:
+                    inComingCall = true;
+                    Log.i("Ringing: ", "New Phone Call Event. Incomming Number : " + incomingNumber);
                     phoneState = "Ringing (" + incomingNumber + ") ";
                     break;
-                case TelephonyManager.CALL_STATE_OFFHOOK :
+                case TelephonyManager.CALL_STATE_OFFHOOK:
                     phoneState = "Offhook";
+                    if (inComingCall) {
+                        calledAttended = true;
+                    }
+                    outGoingCall = true;
+                    Log.i("OFFHOOK: ", "New Phone Call Event. Incomming Number : " + incomingNumber);
                     break;
 
             }
@@ -92,22 +113,49 @@ public class GlobalReceiver extends BroadcastReceiver {
         public void onDataConnectionStateChanged(int state, int networkType) {
             super.onDataConnectionStateChanged(state, networkType);
             String phoneState = "UNKNOWN";
-            switch(state){
-                case TelephonyManager.DATA_CONNECTED :
-                    phoneState = "Connected";
-                    connection = true;
-                    break;
-                case TelephonyManager.DATA_CONNECTING :
-                    phoneState = "Connecting..";
-                    break;
-                case TelephonyManager.DATA_DISCONNECTED :
+            switch (state) {
+
+                case TelephonyManager.DATA_DISCONNECTED:
+                    if (NetworkService.getInstance() == null) {
+                        mContext.startService(new Intent(mContext.getApplicationContext(), NetworkService.class));
+                    }
+                    if (NetworkService.getInstance() != null) {
+                        if (dataState) {
+                            AppGlobals.CURRENT_STATE = AppGlobals.suspend;
+                            NetworkService.getInstance().startLocationUpdate();
+                            dataState = false;
+                        }
+                    }
+                    Log.i(TAG, "onDataConnectionStateChanged: DATA_DISCONNECTED");
                     phoneState = "Disconnected";
                     break;
-                case TelephonyManager.DATA_SUSPENDED :
-                    phoneState = "Suspended";
+                case TelephonyManager.DATA_CONNECTING:
+                    Log.i(TAG, "onDataConnectionStateChanged: DATA_CONNECTING");
+                    phoneState = "Connecting..";
                     break;
+                case TelephonyManager.DATA_CONNECTED:
+                    dataState = true;
+                    phoneState = "Connected";
+                    Log.i(TAG, "onDataConnectionStateChanged: DATA_CONNECTED");
+                    break;
+                case TelephonyManager.DATA_SUSPENDED:
+                    if (dataState) {
+                        phoneState = "Suspended";
+                        Log.i(TAG, "onDataConnectionStateChanged: DATA_SUSPENDED");
+                        AppGlobals.CURRENT_STATE = AppGlobals.suspend;
+                        NetworkService.getInstance().startLocationUpdate();
+                    }
+                    break;
+                default:
+                    Log.w(TAG, "onDataConnectionStateChanged: UNKNOWN " + state);
+                    if (dataState) {
+                        AppGlobals.CURRENT_STATE = AppGlobals.suspend;
+                        NetworkService.getInstance().startLocationUpdate();
+                    }
+                    break;
+
             }
-            if (AppGlobals.APP_FOREGROUND ) {
+            if (AppGlobals.APP_FOREGROUND) {
                 PhoneInfo.getInstance().connectionState_info.setText(phoneState);
             }
 //            setTextViewText(info_ids[INFO_CONNECTION_STATE_INDEX], phoneState);
@@ -118,7 +166,7 @@ public class GlobalReceiver extends BroadcastReceiver {
         public void onDataActivity(int direction) {
             super.onDataActivity(direction);
             String strDirection = "NONE";
-            switch(direction){
+            switch (direction) {
 
                 case TelephonyManager.DATA_ACTIVITY_IN:
                     strDirection = "IN";
@@ -131,10 +179,10 @@ public class GlobalReceiver extends BroadcastReceiver {
                     strDirection = "Dormant";
                     break;
                 case TelephonyManager.DATA_ACTIVITY_NONE:
-                    strDirection="NONE";
+                    strDirection = "NONE";
                     break;
                 case TelephonyManager.DATA_ACTIVITY_OUT:
-                    strDirection="OUT";
+                    strDirection = "OUT";
                     break;
 
             }
@@ -146,7 +194,7 @@ public class GlobalReceiver extends BroadcastReceiver {
         public void onServiceStateChanged(ServiceState serviceState) {
             super.onServiceStateChanged(serviceState);
             String strServiceState = "NONE";
-            switch(serviceState.getState()){
+            switch (serviceState.getState()) {
 
                 case ServiceState.STATE_EMERGENCY_ONLY:
                     strServiceState = "Emergency";
@@ -190,10 +238,10 @@ public class GlobalReceiver extends BroadcastReceiver {
             if (!aBoolean) {
                 PhoneInfo.getInstance().setDataDirection(0);
             } else {
-                    if (AppGlobals.APP_FOREGROUND) {
-                        Log.e("TAG", "wifiAction" + AppGlobals.APP_FOREGROUND);
-                        PhoneInfo.getInstance().connectionState_info.setText("Connected");
-                    }
+                if (AppGlobals.APP_FOREGROUND) {
+                    Log.e("TAG", "wifiAction" + AppGlobals.APP_FOREGROUND);
+                    PhoneInfo.getInstance().connectionState_info.setText("Connected");
+                }
             }
         }
     }
