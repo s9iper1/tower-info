@@ -14,7 +14,7 @@ import android.util.Log;
 public class GlobalReceiver extends BroadcastReceiver {
 
     private static Context mContext;
-    public static boolean wifiAction;
+    public static boolean wifiAction = false;
     private static final String TAG = "GlobalReceiver";
     private static boolean dataState = false;
     private static boolean inComingCall = false;
@@ -60,7 +60,6 @@ public class GlobalReceiver extends BroadcastReceiver {
             AppGlobals.IS_CALL_DROPPED = true;
             switch (state) {
                 case TelephonyManager.CALL_STATE_IDLE:
-                    AppGlobals.IS_CALL_DROPPED = false;
                     phoneState = "IDLE";
                     if (inComingCall && calledAttended || outGoingCall) {
                         if (NetworkService.getInstance() != null) {
@@ -70,6 +69,7 @@ public class GlobalReceiver extends BroadcastReceiver {
                             inComingCall = false;
                             outGoingCall = false;
                             calledAttended = false;
+                            AppGlobals.IS_CALL_DROPPED = false;
                         }
                     }
                     break;
@@ -121,7 +121,7 @@ public class GlobalReceiver extends BroadcastReceiver {
                     if (NetworkService.getInstance() == null) {
                         mContext.startService(new Intent(mContext.getApplicationContext(), NetworkService.class));
                     }
-                    Log.i("TAG", "onDataConnectionStateChanged" + AppGlobals.IS_CALL_DROPPED);
+                    Log.i("TAG", "is call dropped" + AppGlobals.IS_CALL_DROPPED);
                     if (NetworkService.getInstance() != null) {
                         if (dataState || !wifiAction) {
                             if (!AppGlobals.IS_CALL_DROPPED) {
@@ -253,7 +253,6 @@ public class GlobalReceiver extends BroadcastReceiver {
                 }
             } else {
                 if (AppGlobals.APP_FOREGROUND) {
-                    Log.e("TAG", "wifiAction" + AppGlobals.APP_FOREGROUND);
                     PhoneInfo.getInstance().connectionState_info.setText("Connected");
                 }
             }

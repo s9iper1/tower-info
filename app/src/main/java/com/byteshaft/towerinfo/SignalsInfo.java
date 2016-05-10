@@ -17,6 +17,8 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.Set;
+
 public class SignalsInfo extends Fragment implements View.OnClickListener {
 
     private View mBaseView;
@@ -181,10 +183,14 @@ public class SignalsInfo extends Fragment implements View.OnClickListener {
                         getActivity().startService(intent1);
                     }
                     if (NetworkService.getInstance() != null) {
+                        AppGlobals.CURRENT_STATE = AppGlobals.schedule;
                         NetworkService.getInstance().startLocationUpdate();
                     }
                 } else {
-                    new NetworkService.UploadDataTask().execute();
+                    Set<String> strings = Helpers.getHashSet();
+                    if (!strings.isEmpty()) {
+                        new NetworkService.UploadDataTask().execute();
+                    }
                 }
                 break;
         }

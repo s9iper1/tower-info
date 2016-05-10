@@ -189,9 +189,6 @@ public class NetworkService extends Service implements LocationListener,
 
     private final void complete() {
         AppGlobals.Uploaded = false;
-        if (AppGlobals.CURRENT_STATE.equals(AppGlobals.schedule)) {
-            AlarmHelpers.setAlarmForDetails();
-        }
         try {
             // Stop listening.
             mManager.listen(mListener, PhoneStateListener.LISTEN_NONE);
@@ -400,7 +397,15 @@ public class NetworkService extends Service implements LocationListener,
         Log.e(TAG, String.valueOf(mLocationChangedCounter));
         if (mLocationChangedCounter == 3 || mLocationChangedCounter > 3) {
             mLocation = location;
-            AppGlobals.LOCATION = "Lat " + getLatitudeAsString(location) + ",Long " + getLongitudeAsString(location);
+            String lat = null;
+            String lng = null;
+            if (!getLatitudeAsString(location).isEmpty()) {
+                lat = getLatitudeAsString(location);
+            }
+            if (!getLongitudeAsString(location).isEmpty()) {
+                lng = getLongitudeAsString(location);
+            }
+            AppGlobals.LOCATION = "Lat " + lat + ",Long " + lng;
             getHandler().removeCallbacks(mLocationRunnable);
             serviceRunning = false;
             stopLocationUpdate();

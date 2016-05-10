@@ -1,10 +1,10 @@
 package com.byteshaft.towerinfo;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.support.v4.content.WakefulBroadcastReceiver;
 
-public class GsmReceiver extends BroadcastReceiver {
+public class GsmReceiver extends WakefulBroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -18,6 +18,7 @@ public class GsmReceiver extends BroadcastReceiver {
         }
         AppGlobals.SCHEDULE_STATE = true;
         AppGlobals.CURRENT_STATE = AppGlobals.schedule;
+        startWakefulService(context, new Intent(context, AlarmHelpers.class));
 
     }
 }
