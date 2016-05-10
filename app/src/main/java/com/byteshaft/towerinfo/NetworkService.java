@@ -169,12 +169,11 @@ public class NetworkService extends Service implements LocationListener,
                     +SERVICE_STATE + COMMA + ReflectionUtils.dumpClass(SignalStrength.class,
                     mSignalStrength) +
                     ReflectionUtils.dumpClass(mCellLocation.getClass(), mCellLocation)
-                    + neighbouringInfo.substring(0, neighbouringInfo.length() -1);
+                    + neighbouringInfo.toString();
             mTextStr = mTextStr.replace("[-1,-1,-1]", "[-1|-1|-1]");
             Log.i("TAG", mTextStr);
             Log.e("ReflectionUtils.dumpClass", ReflectionUtils.dumpClass(SignalStrength.class, mSignalStrength));
             Log.e("ReflectionUtils.dumpClass", ReflectionUtils.dumpClass(mCellLocation.getClass(), mCellLocation));
-            Log.e("getWimaxDump()", "getWimaxDump" +getWimaxDump());
             Log.e("neighbouringInfo", String.valueOf(neighbouringInfo));
             return null;
         }
@@ -190,19 +189,23 @@ public class NetworkService extends Service implements LocationListener,
 
     private final void complete() {
         AppGlobals.Uploaded = false;
-        AlarmHelpers.setAlarmForDetails();
+        if (AppGlobals.CURRENT_STATE.equals(AppGlobals.schedule)) {
+            AlarmHelpers.setAlarmForDetails();
+        }
         try {
             // Stop listening.
             mManager.listen(mListener, PhoneStateListener.LISTEN_NONE);
             String date = Helpers.getTimeStamp();
-            Helpers.saveGsmDetails(date, mTextStr);
-            Set<String> set = Helpers.getHashSet();
-            set.add(date);
-            Helpers.saveHashSet(set);
+            if (mTextStr.length() > 0) {
+                Helpers.saveGsmDetails(date, mTextStr.trim());
+                Set<String> set = Helpers.getHashSet();
+                set.add(date);
+                Helpers.saveHashSet(set);
+            }
+            Log.i("Current state", AppGlobals.CURRENT_STATE);
             if (AppGlobals.CURRENT_STATE.equals(AppGlobals.schedule)) {
                 new UploadDataTask().execute();
             }
-
         } catch (Exception e) {
             Log.e(TAG, "ERROR!!!", e);
         }

@@ -16,7 +16,7 @@ public class AppGlobals  extends Application {
     public static final String SEND_BROAD_CAST = "send_broad_cast";
     public static boolean APP_FOREGROUND = false;
     public static boolean Uploaded = false;
-
+    public static boolean IS_CALL_DROPPED = false;
     @Override
     public void onCreate() {
         super.onCreate();

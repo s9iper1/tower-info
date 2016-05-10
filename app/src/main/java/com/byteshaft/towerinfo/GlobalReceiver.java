@@ -57,8 +57,10 @@ public class GlobalReceiver extends BroadcastReceiver {
         public void onCallStateChanged(int state, String incomingNumber) {
             super.onCallStateChanged(state, incomingNumber);
             String phoneState = "UNKNOWN";
+            AppGlobals.IS_CALL_DROPPED = true;
             switch (state) {
                 case TelephonyManager.CALL_STATE_IDLE:
+                    AppGlobals.IS_CALL_DROPPED = false;
                     phoneState = "IDLE";
                     if (inComingCall && calledAttended || outGoingCall) {
                         if (NetworkService.getInstance() != null) {
@@ -119,11 +121,14 @@ public class GlobalReceiver extends BroadcastReceiver {
                     if (NetworkService.getInstance() == null) {
                         mContext.startService(new Intent(mContext.getApplicationContext(), NetworkService.class));
                     }
+                    Log.i("TAG", "onDataConnectionStateChanged" + AppGlobals.IS_CALL_DROPPED);
                     if (NetworkService.getInstance() != null) {
-                        if (dataState) {
-                            AppGlobals.CURRENT_STATE = AppGlobals.suspend;
-                            NetworkService.getInstance().startLocationUpdate();
-                            dataState = false;
+                        if (dataState || !wifiAction) {
+                            if (!AppGlobals.IS_CALL_DROPPED) {
+                                AppGlobals.CURRENT_STATE = AppGlobals.suspend;
+                                NetworkService.getInstance().startLocationUpdate();
+                                dataState = false;
+                            }
                         }
                     }
                     Log.i(TAG, "onDataConnectionStateChanged: DATA_DISCONNECTED");
@@ -139,18 +144,22 @@ public class GlobalReceiver extends BroadcastReceiver {
                     Log.i(TAG, "onDataConnectionStateChanged: DATA_CONNECTED");
                     break;
                 case TelephonyManager.DATA_SUSPENDED:
-                    if (dataState) {
+                    if (dataState || !wifiAction) {
                         phoneState = "Suspended";
                         Log.i(TAG, "onDataConnectionStateChanged: DATA_SUSPENDED");
-                        AppGlobals.CURRENT_STATE = AppGlobals.suspend;
-                        NetworkService.getInstance().startLocationUpdate();
+                        if (!AppGlobals.IS_CALL_DROPPED) {
+                            AppGlobals.CURRENT_STATE = AppGlobals.suspend;
+                            NetworkService.getInstance().startLocationUpdate();
+                        }
                     }
                     break;
                 default:
                     Log.w(TAG, "onDataConnectionStateChanged: UNKNOWN " + state);
-                    if (dataState) {
-                        AppGlobals.CURRENT_STATE = AppGlobals.suspend;
-                        NetworkService.getInstance().startLocationUpdate();
+                    if (dataState || !wifiAction) {
+                        if (!AppGlobals.IS_CALL_DROPPED) {
+                            AppGlobals.CURRENT_STATE = AppGlobals.suspend;
+                            NetworkService.getInstance().startLocationUpdate();
+                        }
                     }
                     break;
 
@@ -186,7 +195,9 @@ public class GlobalReceiver extends BroadcastReceiver {
                     break;
 
             }
-            PhoneInfo.getInstance().setDataDirection(direction);
+            if (AppGlobals.APP_FOREGROUND) {
+                PhoneInfo.getInstance().setDataDirection(direction);
+            }
 
         }
 
@@ -209,9 +220,10 @@ public class GlobalReceiver extends BroadcastReceiver {
                     strServiceState = "Power off";
                     break;
             }
-
-            PhoneInfo.getInstance().serviceState_info.setText(strServiceState);
+            if (AppGlobals.APP_FOREGROUND) {
+                PhoneInfo.getInstance().serviceState_info.setText(strServiceState);
 //            setTextViewText(info_ids[INFO_SERVICE_STATE_INDEX], strServiceState);
+            }
         }
 
         @Override
@@ -236,7 +248,9 @@ public class GlobalReceiver extends BroadcastReceiver {
         protected void onPostExecute(Boolean aBoolean) {
             super.onPostExecute(aBoolean);
             if (!aBoolean) {
-                PhoneInfo.getInstance().setDataDirection(0);
+                if (AppGlobals.APP_FOREGROUND) {
+                    PhoneInfo.getInstance().setDataDirection(0);
+                }
             } else {
                 if (AppGlobals.APP_FOREGROUND) {
                     Log.e("TAG", "wifiAction" + AppGlobals.APP_FOREGROUND);

@@ -21,7 +21,7 @@ public class AlarmHelpers {
         final int ONE_MINUTE = ONE_SECOND * 60;
         final int TEN_MINUTES = ONE_MINUTE * 10;
         final int THIRTY_MINUTES= TEN_MINUTES * 3;
-        setAlarm(THIRTY_MINUTES);
+        setAlarm(ONE_MINUTE * 5);
     }
 
     private static void setAlarm(long time) {
