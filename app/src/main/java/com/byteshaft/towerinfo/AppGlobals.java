@@ -11,12 +11,17 @@ public class AppGlobals  extends Application {
     public static String call_dropped = "CALL_DROPPED";
     public static String suspend = "DATA_SUSPEND";
     public static final String KEY = "hash_set";
-    public static String LOCATION = "null";
+    public static String LOCATION = "Lat null" + ",Long null ";
     public static boolean SCHEDULE_STATE = false;
     public static final String SEND_BROAD_CAST = "send_broad_cast";
     public static boolean APP_FOREGROUND = false;
     public static boolean Uploaded = false;
     public static boolean IS_CALL_DROPPED = false;
+    public static final int ONE_SECOND = 1000;
+    public static final int ONE_MINUTE = ONE_SECOND * 60;
+    public static final int TEN_MINUTES = ONE_MINUTE * 10;
+    public static final int THIRTY_MINUTES= TEN_MINUTES * 3;
+
     @Override
     public void onCreate() {
         super.onCreate();

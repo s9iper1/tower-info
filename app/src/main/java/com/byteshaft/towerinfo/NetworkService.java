@@ -1,6 +1,6 @@
 package com.byteshaft.towerinfo;
 
-import android.app.Service;
+import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
@@ -36,7 +36,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.Set;
 
-public class NetworkService extends Service implements LocationListener,
+public class NetworkService extends IntentService implements LocationListener,
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     public static final String TAG = NetworkService.class.getSimpleName();
@@ -59,19 +59,12 @@ public class NetworkService extends Service implements LocationListener,
     private String SERVICE_STATE = "";
     public boolean serviceRunning = false;
 
-    public static NetworkService getInstance() {
-        return sInstance;
+    public NetworkService() {
+        super("service");
     }
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        sInstance = this;
-        alarmHelpers = new AlarmHelpers();
-        if (intent != null && intent.getExtras() != null && intent.getBooleanExtra(AppGlobals.SEND_BROAD_CAST, false)) {
-            sendBroadcast(new Intent("com.byteshaft.gsmDetails"));
-        }
-        mManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-        return START_STICKY;
+    public static NetworkService getInstance() {
+        return sInstance;
     }
 
     @Override
@@ -90,6 +83,15 @@ public class NetworkService extends Service implements LocationListener,
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    @Override
+    protected void onHandleIntent(Intent intent) {
+        Log.i("Service", "service started");
+        sInstance = this;
+        alarmHelpers = new AlarmHelpers();
+        sendBroadcast(new Intent("com.byteshaft.gsmDetails"));
+        mManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
     }
 
     final PhoneStateListener mListener = new PhoneStateListener() {
@@ -147,7 +149,6 @@ public class NetworkService extends Service implements LocationListener,
                                 append(cellSignalStrengthGsm.getDbm()).append("]&");
                     }
                 }
-                Log.e("neighbour", neighbouringInfo.toString());
             }
             Log.d(TAG, "Signal strength obtained.");
             mSignalStrength = sStrength;
@@ -163,7 +164,11 @@ public class NetworkService extends Service implements LocationListener,
 
         protected Void doInBackground(Void... mVoid) {
             String imei = mManager.getDeviceId();
-            mTextStr = AppGlobals.CURRENT_STATE +COMMA+ mManager.getLine1Number() + COMMA + mManager.getSubscriberId() +
+            String mobileNumber = null;
+            if (mManager.getLine1Number() != null) {
+                mobileNumber = mManager.getLine1Number();
+            }
+            mTextStr = AppGlobals.CURRENT_STATE +COMMA+ mobileNumber+ COMMA + mManager.getSubscriberId() +
                     COMMA + imei + COMMA + mManager.getSimSerialNumber() + COMMA + Helpers.getTimeStamp()
                     + COMMA + mManager.getNetworkOperatorName() + COMMA + AppGlobals.LOCATION + COMMA
                     +SERVICE_STATE + COMMA + ReflectionUtils.dumpClass(SignalStrength.class,
@@ -172,9 +177,6 @@ public class NetworkService extends Service implements LocationListener,
                     + neighbouringInfo.toString();
             mTextStr = mTextStr.replace("[-1,-1,-1]", "[-1|-1|-1]");
             Log.i("TAG", mTextStr);
-            Log.e("ReflectionUtils.dumpClass", ReflectionUtils.dumpClass(SignalStrength.class, mSignalStrength));
-            Log.e("ReflectionUtils.dumpClass", ReflectionUtils.dumpClass(mCellLocation.getClass(), mCellLocation));
-            Log.e("neighbouringInfo", String.valueOf(neighbouringInfo));
             return null;
         }
 
@@ -399,10 +401,10 @@ public class NetworkService extends Service implements LocationListener,
             mLocation = location;
             String lat = null;
             String lng = null;
-            if (!getLatitudeAsString(location).isEmpty()) {
+            if (!getLatitudeAsString(location).trim().isEmpty()) {
                 lat = getLatitudeAsString(location);
             }
-            if (!getLongitudeAsString(location).isEmpty()) {
+            if (!getLongitudeAsString(location).trim().isEmpty()) {
                 lng = getLongitudeAsString(location);
             }
             AppGlobals.LOCATION = "Lat " + lat + ",Long " + lng;

@@ -1,10 +1,12 @@
 package com.byteshaft.towerinfo;
 
+import android.Manifest;
 import android.content.Context;
-import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.telephony.TelephonyManager;
 import android.telephony.gsm.GsmCellLocation;
 import android.util.Log;
@@ -15,6 +17,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.github.lzyzsd.circleprogress.ArcProgress;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 public class PhoneInfo extends Fragment {
@@ -62,6 +69,7 @@ public class PhoneInfo extends Fragment {
     public TextView signalLevelInfo;
     public ImageView dataDirection;
     public static PhoneInfo instance;
+    public static final int REQUEST_ID_MULTIPLE_PERMISSIONS = 0;
 
 
     public static PhoneInfo getInstance() {
@@ -91,15 +99,89 @@ public class PhoneInfo extends Fragment {
         signalLevel = (ArcProgress) mBaseView.findViewById(R.id.signalLevel);
         signalLevelInfo = (TextView) mBaseView.findViewById(R.id.signalLevelInfo);
         dataDirection = (ImageView) mBaseView.findViewById(R.id.dataDirection);
-        displayTelephonyInfo();
-        GlobalReceiver.startSignalLevelListener(getActivity().getApplicationContext());
-
+        if(checkAndRequestPermissions()) {
+            // carry on the normal flow, as the case of  permissions  granted.
+            displayTelephonyInfo();
+            GlobalReceiver.startSignalLevelListener(getActivity().getApplicationContext());
+        }
+//
         return mBaseView;
     }
 
+    private boolean checkAndRequestPermissions() {
+        int coarseLocation = ContextCompat.checkSelfPermission(getActivity(),
+                Manifest.permission.ACCESS_COARSE_LOCATION);
+        int storagePermission = ContextCompat.checkSelfPermission(getActivity(),
+                Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        int storagePerm = ContextCompat.checkSelfPermission(getActivity(),
+                Manifest.permission.READ_EXTERNAL_STORAGE);
+        int networkState = ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.READ_PHONE_STATE);
+        int locationPermission = ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION);
+        List<String> listPermissionsNeeded = new ArrayList<>();
+        if (locationPermission != PackageManager.PERMISSION_GRANTED) {
+            listPermissionsNeeded.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+        if (storagePermission != PackageManager.PERMISSION_GRANTED) {
+            listPermissionsNeeded.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+        }
+        if (coarseLocation != PackageManager.PERMISSION_GRANTED) {
+            listPermissionsNeeded.add(Manifest.permission.READ_EXTERNAL_STORAGE);
+        }
+
+        if (storagePerm != PackageManager.PERMISSION_GRANTED) {
+            listPermissionsNeeded.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }
+        if (networkState != PackageManager.PERMISSION_GRANTED) {
+            listPermissionsNeeded.add(Manifest.permission.READ_PHONE_STATE);
+        }
+
+        if (!listPermissionsNeeded.isEmpty()) {
+            requestPermissions(listPermissionsNeeded.toArray(new String[listPermissionsNeeded.size()]),REQUEST_ID_MULTIPLE_PERMISSIONS);
+            return false;
+        }
+        return true;
+    }
+
     @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        Log.i("Called", "cslled");
+        switch (requestCode) {
+            case REQUEST_ID_MULTIPLE_PERMISSIONS: {
+                Map<String, Integer> perms = new HashMap<>();
+                // Initialize the map with both permissions
+                perms.put(Manifest.permission.ACCESS_COARSE_LOCATION, PackageManager.PERMISSION_GRANTED);
+                perms.put(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
+                perms.put(Manifest.permission.READ_EXTERNAL_STORAGE, PackageManager.PERMISSION_GRANTED);
+                perms.put(Manifest.permission.WRITE_EXTERNAL_STORAGE, PackageManager.PERMISSION_GRANTED);
+                perms.put(Manifest.permission.READ_PHONE_STATE, PackageManager.PERMISSION_GRANTED);
+                // Fill with actual results from user
+                Log.i("TAG", String.valueOf(perms));
+                Log.i("TAG", String.valueOf(grantResults.length));
+                if (grantResults.length > 0) {
+                    for (int i = 0; i < permissions.length; i++) {
+                        perms.put(permissions[i], grantResults[i]);
+                    }
+                    Log.i("HashMap", String.valueOf(perms));
+                    // Check for both permissions
+                    if (perms.get(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                            && perms.get(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                            && perms.get(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED
+                            && perms.get(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+                            && perms.get(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                        Log.i("TAG", "permissions granted");
+                        // process the normal flow
+                        //else any one or both the permissions are not granted
+                        displayTelephonyInfo();
+                        GlobalReceiver.startSignalLevelListener(getActivity().getApplicationContext());
+                        MainActivity.getInstance().runServices();
+                        SignalsInfo.getInstance().start();
+                    } else {
+                        Log.i("TAG", "permissions not granted");
+                    }
+                }
+            }
+        }
     }
 
     @Override

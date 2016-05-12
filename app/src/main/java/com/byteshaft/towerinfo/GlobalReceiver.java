@@ -119,7 +119,9 @@ public class GlobalReceiver extends BroadcastReceiver {
 
                 case TelephonyManager.DATA_DISCONNECTED:
                     if (NetworkService.getInstance() == null) {
-                        mContext.startService(new Intent(mContext.getApplicationContext(), NetworkService.class));
+                        AppGlobals.getContext().startService(
+                                new Intent(AppGlobals.getContext().getApplicationContext(),
+                                        NetworkService.class));
                     }
                     Log.i("TAG", "is call dropped" + AppGlobals.IS_CALL_DROPPED);
                     if (NetworkService.getInstance() != null) {

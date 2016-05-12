@@ -34,7 +34,7 @@ public final class ReflectionUtils {
             } catch (Exception e) {
                 mStr += "null";
                 mStr += ",";
-                Log.e(TAG, "Could not get Field `" + mField.getName() + "`.", e);
+//                Log.e(TAG, "Could not get Field `" + mField.getName() + "`.", e);
             }
         }
 
@@ -60,7 +60,7 @@ public final class ReflectionUtils {
             } catch (Exception e) {
                 mStr += "null";
                 mStr += ",";
-                Log.e(TAG, "Could not get Method `" + mMethod.getName() + "`.", e);
+//                Log.e(TAG, "Could not get Method `" + mMethod.getName() + "`.", e);
             }
         }
 

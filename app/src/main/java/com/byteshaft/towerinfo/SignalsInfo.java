@@ -1,10 +1,13 @@
 package com.byteshaft.towerinfo;
 
+import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.telephony.PhoneStateListener;
 import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
@@ -17,6 +20,8 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 public class SignalsInfo extends Fragment implements View.OnClickListener {
@@ -54,10 +59,17 @@ public class SignalsInfo extends Fragment implements View.OnClickListener {
     private TextView lteCqi;
     private TextView gsm;
     private Button uploadButton;
+    public static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 0;
+    public static SignalsInfo sInstance;
+
+    public static SignalsInfo getInstance() {
+        return sInstance;
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mBaseView = inflater.inflate(R.layout.fragment_signals, container, false);
+        sInstance = this;
 //        textBatteryLevel = (TextView) mBaseView.findViewById(R.id.batterylevel);
         mSignalStrength = (TextView) mBaseView.findViewById(R.id.signal_strength);
         gsmBitError = (TextView) mBaseView.findViewById(R.id.bit_error);
@@ -74,11 +86,12 @@ public class SignalsInfo extends Fragment implements View.OnClickListener {
         gsm = (TextView) mBaseView.findViewById(R.id.gsm);
         uploadButton = (Button) mBaseView.findViewById(R.id.upload);
         uploadButton.setOnClickListener(this);
-        displayTelephonyInfo();
-        MyListener   = new MyPhoneStateListener();
         Tel = ( TelephonyManager ) getActivity().getApplicationContext()
                 .getSystemService(Context.TELEPHONY_SERVICE);
-        Tel.listen(MyListener , PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
+        if(checkAndRequestPermissions()) {
+            start();
+        }
+
 
 //	      try {
 //	    	    final TelephonyManager tm = (TelephonyManager) this.getSystemService(Context.TELEPHONY_SERVICE);
@@ -103,6 +116,44 @@ public class SignalsInfo extends Fragment implements View.OnClickListener {
         return mBaseView;
     }
 
+    public void start() {
+        displayTelephonyInfo();
+        MyListener   = new MyPhoneStateListener();
+        Tel.listen(MyListener , PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
+    }
+
+    private boolean checkAndRequestPermissions() {
+        int coarseLocation = ContextCompat.checkSelfPermission(getActivity(),
+                Manifest.permission.ACCESS_COARSE_LOCATION);
+        int bootComplete = ContextCompat.checkSelfPermission(getActivity(),
+                Manifest.permission.RECEIVE_BOOT_COMPLETED);
+        int networkState = ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_NETWORK_STATE);
+        int wakeLock = ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WAKE_LOCK);
+        int locationPermission = ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION);
+        List<String> listPermissionsNeeded = new ArrayList<>();
+        if (locationPermission != PackageManager.PERMISSION_GRANTED) {
+            listPermissionsNeeded.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+        if (bootComplete != PackageManager.PERMISSION_GRANTED) {
+            listPermissionsNeeded.add(Manifest.permission.RECEIVE_BOOT_COMPLETED);
+        }
+        if (networkState != PackageManager.PERMISSION_GRANTED) {
+            listPermissionsNeeded.add(Manifest.permission.ACCESS_NETWORK_STATE);
+        }
+        if (wakeLock != PackageManager.PERMISSION_GRANTED) {
+            listPermissionsNeeded.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+
+        if (coarseLocation != PackageManager.PERMISSION_GRANTED) {
+            listPermissionsNeeded.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+        }
+        if (!listPermissionsNeeded.isEmpty()) {
+//            ActivityCompat.requestPermissions(getActivity(), listPermissionsNeeded.toArray(new String[listPermissionsNeeded.size()]),REQUEST_ID_MULTIPLE_PERMISSIONS);
+            return false;
+        }
+        return true;
+    }
+
     @Override
     public void onPause() {
         super.onPause();
@@ -113,7 +164,11 @@ public class SignalsInfo extends Fragment implements View.OnClickListener {
     @Override
     public void onResume() {
         super.onResume();
-        Tel.listen(MyListener,PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
+        if (ContextCompat.checkSelfPermission(getActivity(),
+                Manifest.permission_group.LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            Tel.listen(MyListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
+        }
     }
 
     private void displayTelephonyInfo() {

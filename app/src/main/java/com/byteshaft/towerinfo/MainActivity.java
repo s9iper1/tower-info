@@ -1,11 +1,14 @@
 package com.byteshaft.towerinfo;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -15,12 +18,17 @@ public class MainActivity extends AppCompatActivity {
 
     private SectionsPagerAdapter mSectionsPagerAdapter;
     private ViewPager mViewPager;
+    public static MainActivity sInstance;
+
+    public static MainActivity getInstance() {
+        return sInstance;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        sInstance = this;
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         // Create the adapter that will return a fragment for each of the three
@@ -32,10 +40,26 @@ public class MainActivity extends AppCompatActivity {
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(mViewPager);
+        runServices();
+    }
+
+    public void runServices() {
         Intent intent = new Intent(getApplicationContext(), NetworkService.class);
         intent.putExtra(AppGlobals.SEND_BROAD_CAST, true);
-        if (NetworkService.getInstance() == null) {
-            startService(intent);
+        if (ContextCompat.checkSelfPermission(getApplicationContext(),
+                Manifest.permission.READ_PHONE_STATE)
+                == PackageManager.PERMISSION_GRANTED) {
+            if (NetworkService.getInstance() == null) {
+                startService(intent);
+            } else {
+                NetworkService.getInstance().stopSelf();
+                startService(intent);
+            }
+        }
+        if (ContextCompat.checkSelfPermission(getApplicationContext(),
+                Manifest.permission.READ_PHONE_STATE)
+                == PackageManager.PERMISSION_GRANTED) {
+//            startService(new Intent(getApplicationContext(), AlarmHelpers.class));
         }
     }
 
